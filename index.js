@@ -66,7 +66,7 @@ wss.on('connection', (ws) => {
                 encoding: 'LINEAR16',
                 sampleRateHertz: 48000,
                 languageCode: 'ja-JP',
-                alternativeLanguageCodes: ['en-US']
+                // alternativeLanguageCodes: ['en-US']
             },
             interimResults: true,
         })
