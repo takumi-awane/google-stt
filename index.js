@@ -41,6 +41,20 @@ async function translateText(text, targetLang = 'JA') {
     }
 }
 
+async function synthesizeSpeech(text) {
+    if (!text || text.trim() === '') {
+        throw new Error('TTS: 空のテキストが渡されました');
+    }
+    const request = {
+        input: { text },
+        voice: { languageCode: 'en-US', ssmlGender: 'FEMALE' },
+        audioConfig: { audioEncoding: 'MP3' },
+    };
+    const [response] = await ttsClient.synthesizeSpeech(request);
+    return response.audioContent.toString('base64');
+}
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 wss.on('connection', (ws) => {
@@ -71,6 +85,20 @@ wss.on('connection', (ws) => {
             if (result.isFinal && transcript) {
                 const translation = await translateText(transcript, 'EN');
                 console.log('🟦 翻訳結果:', translation);
+
+                if (translation?.trim()) {
+                    const audioBase64 = await synthesizeSpeech(translation);
+                    console.log('🟧 音声生成完了');
+
+                    ws.send(JSON.stringify({
+                        transcript,
+                        isFinal: result.isFinal,
+                        translation,
+                        audio: audioBase64,
+                    }));
+                } else {
+                    console.log('🟨 翻訳結果が空だったため、TTSスキップ');
+                }
             }
         });
 
